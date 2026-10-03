@@ -1,0 +1,34 @@
+# Vai para `rogeriofleming/daedalus-status/.github/workflows/vigia.yml`, junto com
+# `aviso_queda.mjs` e `vigia.mjs` na raiz. Segredo: DAEDALUS_EMERGENCIA_JWK.
+# Ver projetos/compressor-interno/licenca/SERVIDOR_FORA_DO_AR.md.
+name: vigia da licenca
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  vigiar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: conferir o servidor e, se preciso, emitir o aviso
+        id: vigia
+        env:
+          DAEDALUS_EMERGENCIA_JWK: ${{ secrets.DAEDALUS_EMERGENCIA_JWK }}
+          DAEDALUS_CHAVE_PUBLICA_APP: ${{ vars.DAEDALUS_CHAVE_PUBLICA_APP }}
+        run: node vigia.mjs
+        continue-on-error: true
+      - name: gravar o estado e o aviso
+        run: |
+          git config user.name "vigia"
+          git config user.email "vigia@users.noreply.github.com"
+          git add -A estado.json aviso.txt 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "vigia: $(date -u +%FT%TZ)" && git push)
+      - name: ficar vermelho quando o servidor estiver fora (o GitHub avisa por e-mail)
+        if: steps.vigia.outcome == 'failure'
+        run: exit 1

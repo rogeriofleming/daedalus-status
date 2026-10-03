@@ -1,4 +1,4 @@
-# TEMPORÁRIO — mede o que o runner do GitHub recebe hoje do servidor da licença.
+# TEMPORÁRIO — o endereço workers.dev escapa do challenge que a zona aplica a datacenter?
 # Apagar depois de ler o resultado.
 name: medir o acesso do runner
 on:
@@ -7,26 +7,21 @@ jobs:
   medir:
     runs-on: ubuntu-latest
     steps:
-      - name: saude pelo dominio do produto
+      - name: pelo dominio do produto (na zona — espera-se 403 challenge)
         run: |
-          echo "--- /api/saude (curl padrao) ---"
-          curl -sS -i --max-time 25 https://daedalus.rogeriofleming.com.br/api/saude | head -30 || true
-          echo
-          echo "--- /api/saude (user-agent de navegador) ---"
-          curl -sS -o /dev/null -w "codigo=%{http_code}\n" --max-time 25 \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36" \
+          curl -sS -o /dev/null -w "saude pelo dominio:        %{http_code}\n" --max-time 25 \
             https://daedalus.rogeriofleming.com.br/api/saude || true
-          echo "--- /api/chave-publica ---"
-          curl -sS -o /dev/null -w "codigo=%{http_code}\n" --max-time 25 \
-            https://daedalus.rogeriofleming.com.br/api/chave-publica || true
-          echo "--- /baixar (HEAD, so para comparar) ---"
-          curl -sS -I -o /dev/null -w "codigo=%{http_code}\n" --max-time 25 \
-            https://daedalus.rogeriofleming.com.br/baixar || true
-          echo "--- a pagina de venda, que e Pages/assets ---"
-          curl -sS -o /dev/null -w "codigo=%{http_code}\n" --max-time 25 \
-            https://rogeriofleming.com.br/daedalus || true
+      - name: pelo endereco do vigia (fora da zona)
+        run: |
+          echo "--- corpo da saude pelo workers.dev ---"
+          curl -sS --max-time 25 https://daedalus-licenca.rogeriofleming587.workers.dev/api/saude || true
+          echo
+          curl -sS -o /dev/null -w "saude pelo workers.dev:    %{http_code}\n" --max-time 25 \
+            https://daedalus-licenca.rogeriofleming587.workers.dev/api/saude || true
+          curl -sS -o /dev/null -w "chave-publica workers.dev: %{http_code}\n" --max-time 25 \
+            https://daedalus-licenca.rogeriofleming587.workers.dev/api/chave-publica || true
+          curl -sS -o /dev/null -w "admin workers.dev (404):   %{http_code}\n" --max-time 25 \
+            https://daedalus-licenca.rogeriofleming587.workers.dev/admin || true
       - name: node fetch, igual ao vigia
         run: |
-          node -e "fetch('https://daedalus.rogeriofleming.com.br/api/saude',{cache:'no-store'}).then(async r=>{console.log('codigo',r.status);console.log('cf-mitigated',r.headers.get('cf-mitigated'));console.log('corpo',(await r.text()).slice(0,200))}).catch(e=>console.log('erro',e.message))"
-      - name: de onde o runner fala
-        run: curl -sS --max-time 20 https://api.ipify.org || true
+          node -e "fetch('https://daedalus-licenca.rogeriofleming587.workers.dev/api/saude',{cache:'no-store'}).then(async r=>{const j=await r.json().catch(()=>null);console.log('codigo',r.status,'| cf-mitigated',r.headers.get('cf-mitigated'),'| ok',j&&j.ok)}).catch(e=>console.log('erro',e.message))"

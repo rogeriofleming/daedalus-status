@@ -1,18 +1,18 @@
-# Vai para `rogeriofleming/daedalus-status/.github/workflows/vigia.yml`, junto com
-# `aviso_queda.mjs` e `vigia.mjs` na raiz. Segredo: DAEDALUS_EMERGENCIA_JWK.
-# Ver projetos/compressor-interno/licenca/SERVIDOR_FORA_DO_AR.md.
+# Vigia do servidor da licença do Daedalus.
+# Fonte: projetos/compressor-interno/licenca/status/vigia.yml (o cofre é a cópia de trabalho).
+# Segredo: DAEDALUS_EMERGENCIA_JWK · Variável: DAEDALUS_CHAVE_PUBLICA_APP
+# Ver licenca/SERVIDOR_FORA_DO_AR.md e licenca/OPERACAO.md §6.
 name: vigia da licenca
 on:
-  # ⚠️ AGENDAMENTO DESARMADO em 02/10/2026, de propósito.
-  # A Cloudflare responde `403 cf-mitigated: challenge` a requisições vindas de
-  # datacenter — e o runner do GitHub é datacenter. Medido: do computador do Roger
-  # a /api/saude devolve 200 com qualquer user-agent; do runner, 403 nas duas rotas.
-  # Com o agendamento ligado, o vigia ficaria vermelho a cada 10 min e mandaria
-  # e-mail de falha para sempre, sem o servidor ter caído uma vez.
-  # RELIGAR (tirar o comentário do cron) depois que a zona rogeriofleming.com.br
-  # tiver uma regra WAF de skip para /api/saude e /api/chave-publica.
-  # schedule:
-  #   - cron: "*/10 * * * *"
+  # RELIGADO em 03/10/2026. Ficou desarmado de 02/10 a 03/10 porque a zona
+  # rogeriofleming.com.br responde `403 cf-mitigated: challenge` a quem vem de datacenter, e o
+  # runner é datacenter — o vigia não conseguia distinguir "caiu" de "fui barrado".
+  # O conserto não foi mexer no firewall: o vigia passou a decidir pelo endereço *.workers.dev do
+  # mesmo Worker, que NÃO está na zona (medido do runner em 03/10: 200 por lá, 403 pelo domínio).
+  # O domínio do produto continua sendo olhado — challenge nele não é queda, mas 5xx ou sem
+  # resposta é, porque é por ele que o app de quem pagou fala.
+  schedule:
+    - cron: "*/10 * * * *"
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -39,4 +39,8 @@ jobs:
           git diff --cached --quiet || (git commit -m "vigia: $(date -u +%FT%TZ)" && git push)
       - name: ficar vermelho quando o servidor estiver fora (o GitHub avisa por e-mail)
         if: steps.vigia.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "O servidor da licenca do Daedalus NAO esta no ar."
+          echo "O motivo sai no passo anterior, no campo 'porque' do JSON."
+          echo "Manual: projetos/compressor-interno/licenca/OPERACAO.md"
+          exit 1

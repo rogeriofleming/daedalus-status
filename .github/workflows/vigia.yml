@@ -3,8 +3,16 @@
 # Ver projetos/compressor-interno/licenca/SERVIDOR_FORA_DO_AR.md.
 name: vigia da licenca
 on:
-  schedule:
-    - cron: "*/10 * * * *"
+  # ⚠️ AGENDAMENTO DESARMADO em 02/10/2026, de propósito.
+  # A Cloudflare responde `403 cf-mitigated: challenge` a requisições vindas de
+  # datacenter — e o runner do GitHub é datacenter. Medido: do computador do Roger
+  # a /api/saude devolve 200 com qualquer user-agent; do runner, 403 nas duas rotas.
+  # Com o agendamento ligado, o vigia ficaria vermelho a cada 10 min e mandaria
+  # e-mail de falha para sempre, sem o servidor ter caído uma vez.
+  # RELIGAR (tirar o comentário do cron) depois que a zona rogeriofleming.com.br
+  # tiver uma regra WAF de skip para /api/saude e /api/chave-publica.
+  # schedule:
+  #   - cron: "*/10 * * * *"
   workflow_dispatch: {}
 permissions:
   contents: write
